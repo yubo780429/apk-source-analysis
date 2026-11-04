@@ -1,0 +1,85 @@
+package b.b.c.b;
+
+import android.content.Context;
+import android.graphics.Typeface;
+import android.os.CancellationSignal;
+import android.os.ParcelFileDescriptor;
+import android.system.ErrnoException;
+import android.system.Os;
+import android.system.OsConstants;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+
+/* JADX INFO: loaded from: classes.dex */
+class d extends h {
+    d() {
+    }
+
+    private File a(ParcelFileDescriptor parcelFileDescriptor) {
+        try {
+            String str = Os.readlink("/proc/self/fd/" + parcelFileDescriptor.getFd());
+            if (OsConstants.S_ISREG(Os.stat(str).st_mode)) {
+                return new File(str);
+            }
+        } catch (ErrnoException unused) {
+        }
+        return null;
+    }
+
+    @Override // b.b.c.b.h
+    public Typeface a(Context context, CancellationSignal cancellationSignal, b.b.c.d.b.f[] fVarArr, int i) {
+        if (fVarArr.length < 1) {
+            return null;
+        }
+        b.b.c.d.b.f fVarA = a(fVarArr, i);
+        try {
+            ParcelFileDescriptor parcelFileDescriptorOpenFileDescriptor = context.getContentResolver().openFileDescriptor(fVarA.c(), "r", cancellationSignal);
+            try {
+                File fileA = a(parcelFileDescriptorOpenFileDescriptor);
+                if (fileA != null && fileA.canRead()) {
+                    Typeface typefaceCreateFromFile = Typeface.createFromFile(fileA);
+                    if (parcelFileDescriptorOpenFileDescriptor != null) {
+                        parcelFileDescriptorOpenFileDescriptor.close();
+                    }
+                    return typefaceCreateFromFile;
+                }
+                FileInputStream fileInputStream = new FileInputStream(parcelFileDescriptorOpenFileDescriptor.getFileDescriptor());
+                try {
+                    Typeface typefaceA = super.a(context, fileInputStream);
+                    fileInputStream.close();
+                    if (parcelFileDescriptorOpenFileDescriptor != null) {
+                        parcelFileDescriptorOpenFileDescriptor.close();
+                    }
+                    return typefaceA;
+                } catch (Throwable th) {
+                    try {
+                        throw th;
+                    } catch (Throwable th2) {
+                        try {
+                            fileInputStream.close();
+                        } catch (Throwable th3) {
+                            th.addSuppressed(th3);
+                        }
+                        throw th2;
+                    }
+                }
+            } catch (Throwable th4) {
+                try {
+                    throw th4;
+                } catch (Throwable th5) {
+                    if (parcelFileDescriptorOpenFileDescriptor != null) {
+                        try {
+                            parcelFileDescriptorOpenFileDescriptor.close();
+                        } catch (Throwable th6) {
+                            th4.addSuppressed(th6);
+                        }
+                    }
+                    throw th5;
+                }
+            }
+        } catch (IOException unused) {
+            return null;
+        }
+    }
+}
